@@ -1,0 +1,232 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://geotechnick.com/schemas/soil-profile-v1.0.json",
+  "title": "Geotechnical Soil Profile Schema",
+  "description": "JSON schema for geotechnical soil strata interpretation and design parameters",
+  "version": "1.0.0",
+  "type": "object",
+  "required": ["project_metadata", "explorations", "interpreted_strata"],
+  "properties": {
+    "project_metadata": {
+      "type": "object",
+      "required": ["project_name", "project_number", "date_created", "created_by", "version"],
+      "properties": {
+        "project_name": {"type": "string", "minLength": 1},
+        "project_number": {"type": "string", "minLength": 1},
+        "date_created": {"type": "string", "format": "date-time"},
+        "created_by": {"type": "string", "minLength": 1},
+        "version": {"type": "string", "pattern": "^\\d+\\.\\d+\\.\\d+$"},
+        "coordinate_system": {"type": "string", "default": "State Plane"}
+      }
+    },
+    "explorations": {
+      "type": "object",
+      "patternProperties": {
+        "^[A-Za-z0-9_-]+$": {
+          "type": "object",
+          "required": ["location", "drilling_info", "samples"],
+          "properties": {
+            "location": {
+              "type": "object",
+              "required": ["x", "y", "elevation"],
+              "properties": {
+                "x": {"type": "number"},
+                "y": {"type": "number"},
+                "elevation": {"type": "number"},
+                "coordinate_system": {"type": "string", "default": "State Plane"}
+              }
+            },
+            "drilling_info": {
+              "type": "object",
+              "required": ["method", "date", "contractor"],
+              "properties": {
+                "method": {"type": "string", "minLength": 1},
+                "date": {"type": "string", "format": "date"},
+                "contractor": {"type": "string", "minLength": 1}
+              }
+            },
+            "samples": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "required": ["sample_id", "depth_top", "depth_bottom", "field_description"],
+                "properties": {
+                  "sample_id": {"type": "string", "minLength": 1},
+                  "depth_top": {"type": "number", "minimum": 0},
+                  "depth_bottom": {"type": "number", "minimum": 0},
+                  "field_description": {"type": "string", "minLength": 1},
+                  "uscs_classification": {
+                    "type": "string",
+                    "enum": ["GW", "GP", "GM", "GC", "SW", "SP", "SM", "SC", "ML", "CL", "OL", "MH", "CH", "OH", "PT"]
+                  },
+                  "field_tests": {
+                    "type": "object",
+                    "properties": {
+                      "spt_n_value": {"type": "number", "minimum": 0},
+                      "field_moisture": {"type": "number", "minimum": 0},
+                      "penetration_resistance": {"type": "number", "minimum": 0}
+                    }
+                  },
+                  "laboratory_tests": {
+                    "type": "object",
+                    "properties": {
+                      "gradation": {
+                        "type": "object",
+                        "properties": {
+                          "gravel_percent": {"type": "number", "minimum": 0, "maximum": 100},
+                          "sand_percent": {"type": "number", "minimum": 0, "maximum": 100},
+                          "fines_percent": {"type": "number", "minimum": 0, "maximum": 100},
+                          "d10": {"type": "number", "minimum": 0},
+                          "d30": {"type": "number", "minimum": 0},
+                          "d60": {"type": "number", "minimum": 0},
+                          "cu": {"type": "number", "minimum": 1},
+                          "cc": {"type": "number", "minimum": 0}
+                        }
+                      },
+                      "atterberg_limits": {
+                        "type": "object",
+                        "properties": {
+                          "liquid_limit": {"type": "number", "minimum": 0, "maximum": 200},
+                          "plastic_limit": {"type": "number", "minimum": 0, "maximum": 200},
+                          "plasticity_index": {"type": "number", "minimum": 0, "maximum": 200}
+                        }
+                      },
+                      "moisture_density": {
+                        "type": "object",
+                        "properties": {
+                          "natural_moisture": {"type": "number", "minimum": 0},
+                          "dry_density": {"type": "number", "minimum": 0},
+                          "wet_density": {"type": "number", "minimum": 0}
+                        }
+                      },
+                      "strength_tests": {
+                        "type": "object",
+                        "properties": {
+                          "unconfined_compression": {"type": "number", "minimum": 0},
+                          "triaxial_tests": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": ["confining_pressure", "peak_strength"],
+                              "properties": {
+                                "confining_pressure": {"type": "number", "minimum": 0},
+                                "peak_strength": {"type": "number", "minimum": 0},
+                                "friction_angle": {"type": "number", "minimum": 0, "maximum": 90}
+                              }
+                            }
+                          },
+                          "direct_shear": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "required": ["normal_stress", "shear_strength"],
+                              "properties": {
+                                "normal_stress": {"type": "number", "minimum": 0},
+                                "shear_strength": {"type": "number", "minimum": 0}
+                              }
+                            }
+                          }
+                        }
+                      },
+                      "consolidation_tests": {
+                        "type": "object",
+                        "properties": {
+                          "preconsolidation_pressure": {"type": "number", "minimum": 0},
+                          "compression_index": {"type": "number", "minimum": 0},
+                          "recompression_index": {"type": "number", "minimum": 0},
+                          "coefficient_consolidation": {"type": "number", "minimum": 0}
+                        }
+                      },
+                      "permeability_tests": {
+                        "type": "object",
+                        "properties": {
+                          "horizontal_permeability": {"type": "number", "minimum": 0},
+                          "vertical_permeability": {"type": "number", "minimum": 0},
+                          "test_method": {"type": "string"}
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "interpreted_strata": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["strata_id", "top_elevation", "bottom_elevation", "soil_type", "uscs_classification"],
+        "properties": {
+          "strata_id": {"type": "string", "minLength": 1},
+          "top_elevation": {"type": "number"},
+          "bottom_elevation": {"type": "number"},
+          "soil_type": {"type": "string", "minLength": 1},
+          "uscs_classification": {
+            "type": "string",
+            "enum": ["GW", "GP", "GM", "GC", "SW", "SP", "SM", "SC", "ML", "CL", "OL", "MH", "CH", "OH", "PT"]
+          },
+          "design_parameters": {
+            "type": "object",
+            "properties": {
+              "unit_weight": {"$ref": "#/definitions/design_parameter"},
+              "friction_angle": {"$ref": "#/definitions/design_parameter"},
+              "cohesion": {"$ref": "#/definitions/design_parameter"},
+              "modulus_elasticity": {"$ref": "#/definitions/design_parameter"},
+              "permeability_horizontal": {"$ref": "#/definitions/design_parameter"},
+              "permeability_vertical": {"$ref": "#/definitions/design_parameter"},
+              "preconsolidation_pressure": {"$ref": "#/definitions/design_parameter"},
+              "compression_index": {"$ref": "#/definitions/design_parameter"},
+              "coefficient_consolidation": {"$ref": "#/definitions/design_parameter"}
+            }
+          },
+          "supporting_data": {
+            "type": "object",
+            "required": ["samples_used"],
+            "properties": {
+              "samples_used": {
+                "type": "array",
+                "items": {"type": "string"}
+              },
+              "calculation_details": {"type": "object"},
+              "references": {
+                "type": "array",
+                "items": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "calculation_methods": {
+      "type": "object",
+      "properties": {
+        "equations_used": {"type": "object"},
+        "validation_results": {"type": "object"},
+        "quality_metrics": {"type": "object"}
+      }
+    }
+  },
+  "definitions": {
+    "design_parameter": {
+      "type": "object",
+      "required": ["value", "calculation_method", "source", "confidence"],
+      "properties": {
+        "value": {"type": "number"},
+        "calculation_method": {"type": "string", "minLength": 1},
+        "source": {
+          "type": "string",
+          "enum": ["manual", "calculated", "estimated"]
+        },
+        "confidence": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "override_justification": {"type": "string"}
+      }
+    }
+  }
+}

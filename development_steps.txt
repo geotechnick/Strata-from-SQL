@@ -1,0 +1,671 @@
+GEOTECHNICAL STRATA INTERPRETATION EXECUTABLE - DETAILED DEVELOPMENT STEPS
+==========================================================================
+
+PHASE 1: FOUNDATION & ARCHITECTURE (Weeks 1-2)
+==============================================
+
+STEP 1: TECHNOLOGY STACK SELECTION
+----------------------------------
+Execute:
+- Install Python 3.11+ (latest stable version for performance and security)
+- Set up virtual environment: python -m venv strata_env
+- Install core dependencies:
+  * PyQt6 (primary GUI framework - more modern than Tkinter, better performance than web-based)
+  * SQLite3 (built-in Python module, matches DIGGS SQL compatibility)
+  * pandas (data manipulation and analysis)
+  * numpy (numerical computations for engineering calculations)
+  * matplotlib (2D plotting for profiles and charts)
+  * folium (interactive maps for exploration locations)
+  * pyqtgraph (real-time plotting, faster than matplotlib for interactive plots)
+  * pytest (professional testing framework)
+  * black (code formatting)
+  * flake8 (code linting)
+  * mypy (type checking)
+
+Rationale: PyQt6 provides native desktop performance with professional appearance. SQLite ensures compatibility with DIGGS SQL while maintaining portability. This stack balances functionality with deployment simplicity.
+
+STEP 2: PROJECT STRUCTURE SETUP
+-------------------------------
+Execute:
+Create directory structure:
+```
+strata-interpreter/
+├── src/
+│   ├── __init__.py
+│   ├── main.py                    # Application entry point
+│   ├── core/
+│   │   ├── __init__.py
+│   │   ├── database.py           # SQLite connection and models
+│   │   ├── calculations.py       # Parameter calculation engine
+│   │   ├── validators.py         # Data validation functions
+│   │   ├── models.py            # Data models and schemas
+│   │   ├── json_export.py        # JSON soil property export engine
+│   │   └── json_import.py        # JSON soil property import engine
+│   ├── gui/
+│   │   ├── __init__.py
+│   │   ├── main_window.py        # Main application window
+│   │   ├── tabs/
+│   │   │   ├── __init__.py
+│   │   │   ├── map_profile_tab.py
+│   │   │   ├── index_values_tab.py
+│   │   │   └── parameter_tabs.py
+│   │   └── widgets/
+│   │       ├── __init__.py
+│   │       ├── profile_viewer.py
+│   │       └── parameter_input.py
+│   ├── utils/
+│   │   ├── __init__.py
+│   │   ├── color_schemes.py      # USCS color coding
+│   │   ├── file_handlers.py      # Import/export utilities
+│   │   └── constants.py          # Application constants
+│   └── resources/
+│       ├── styles/               # CSS stylesheets
+│       ├── icons/               # Application icons
+│       ├── equations.json       # Parameter calculation equations
+│       └── schema/
+│           └── soil_profile_schema.json # JSON schema for soil profiles
+├── tests/
+│   ├── __init__.py
+│   ├── test_calculations.py
+│   ├── test_database.py
+│   ├── test_gui.py
+│   ├── test_json_export.py
+│   └── test_json_import.py
+├── docs/
+│   ├── user_manual.md
+│   └── api_documentation.md
+├── requirements.txt
+├── requirements-dev.txt          # Development dependencies
+├── setup.py
+├── pyproject.toml               # Modern Python packaging
+└── .github/workflows/           # CI/CD configuration
+    └── test-and-build.yml
+```
+
+Rationale: Modular structure enables parallel development, clear separation of concerns, and easy maintenance. Separate test and documentation folders ensure professional development practices.
+
+PHASE 2: CORE DATA LAYER (Weeks 3-4)
+====================================
+
+STEP 3: DATABASE INTEGRATION
+----------------------------
+Execute:
+1. Study DIGGS SQL schema from referenced repository
+2. Create database.py with:
+   - SQLAlchemy ORM models matching DIGGS tables
+   - Connection management with proper error handling
+   - Database migration system for schema updates
+   - Backup and restore functionality
+
+Key Tables to Implement:
+- Project (project metadata)
+- HoleInfo (borehole locations and details)
+- Samples (sample data with depths)
+- TestMethod (test procedures and standards)
+- FieldStrata (field observations)
+- FinalStrata (interpreted layers)
+- Test Result Tables: Gradation, Consolidation, uuTest, cuTest, dsTest, Perm, Proctor, CBR
+
+Implementation Details:
+- Use SQLAlchemy for ORM (Object-Relational Mapping)
+- Implement connection pooling for performance
+- Add database integrity constraints and foreign key relationships
+- Create data import functions for existing DIGGS SQL databases
+- Implement transaction management for data consistency
+
+Rationale: SQLAlchemy provides database abstraction and migration capabilities. Proper ORM design ensures data integrity and simplifies complex queries needed for geotechnical analysis.
+
+STEP 4: PARAMETER CALCULATION ENGINE
+-----------------------------------
+Execute:
+1. Parse Parameter Calculation References document (convert from .docx to structured data)
+2. Create calculations.py with:
+   - Individual calculation methods for each design parameter
+   - Multiple calculation approaches per parameter (user selectable)
+   - Validation ranges and error checking
+   - Unit conversion utilities
+   - Confidence metrics and uncertainty quantification
+
+3. Create JSON Export/Import System:
+   - Design comprehensive JSON schema for soil profiles
+   - Implement json_export.py for complete data serialization
+   - Implement json_import.py for data loading and validation
+
+Parameter Categories to Implement:
+- Unit Weight (saturated, dry, submerged)
+- Granular Material Friction Angle (SPT correlations, direct shear)
+- Fine Material Effective Friction Angle (plasticity index correlations)
+- Undrained Shear Strength (unconfined, triaxial, field vane)
+- Modulus of Elasticity (empirical correlations, lab tests)
+- Preconsolidation Pressure (Casagrande method, strain energy)
+- Coefficients of Consolidation (Cvh, Cvt from test data)
+- Time Rate Coefficients (secondary compression)
+- Hydraulic Conductivity (Hazen, Kozeny-Carman, lab tests)
+
+Implementation Strategy:
+- Use Strategy Pattern for multiple calculation methods
+- Implement equation validation against known ranges
+- Add citation tracking for calculation methods
+- Create parameter uncertainty estimation
+- Build equation editor for custom calculations
+
+4. JSON Schema Design (soil_profile_schema.json):
+Create comprehensive schema including:
+```json
+{
+  "project_metadata": {
+    "project_name": "string",
+    "project_number": "string", 
+    "date_created": "ISO 8601 datetime",
+    "created_by": "string",
+    "version": "string",
+    "coordinate_system": "string"
+  },
+  "explorations": {
+    "borehole_id": {
+      "location": {"x": "number", "y": "number", "elevation": "number"},
+      "drilling_info": {"method": "string", "date": "date", "contractor": "string"},
+      "samples": [
+        {
+          "sample_id": "string",
+          "depth_top": "number",
+          "depth_bottom": "number",
+          "field_description": "string",
+          "uscs_classification": "string",
+          "field_tests": {
+            "spt_n_value": "number",
+            "field_moisture": "number",
+            "penetration_resistance": "number"
+          },
+          "laboratory_tests": {
+            "gradation": {
+              "gravel_percent": "number",
+              "sand_percent": "number", 
+              "fines_percent": "number",
+              "d10": "number", "d30": "number", "d60": "number",
+              "cu": "number", "cc": "number"
+            },
+            "atterberg_limits": {
+              "liquid_limit": "number",
+              "plastic_limit": "number", 
+              "plasticity_index": "number"
+            },
+            "moisture_density": {
+              "natural_moisture": "number",
+              "dry_density": "number",
+              "wet_density": "number"
+            },
+            "strength_tests": {
+              "unconfined_compression": "number",
+              "triaxial_tests": [
+                {"confining_pressure": "number", "peak_strength": "number", "friction_angle": "number"}
+              ],
+              "direct_shear": [
+                {"normal_stress": "number", "shear_strength": "number"}
+              ]
+            },
+            "consolidation_tests": {
+              "preconsolidation_pressure": "number",
+              "compression_index": "number",
+              "recompression_index": "number",
+              "coefficient_consolidation": "number"
+            },
+            "permeability_tests": {
+              "horizontal_permeability": "number",
+              "vertical_permeability": "number",
+              "test_method": "string"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "interpreted_strata": [
+    {
+      "strata_id": "string",
+      "top_elevation": "number",
+      "bottom_elevation": "number", 
+      "soil_type": "string",
+      "uscs_classification": "string",
+      "design_parameters": {
+        "unit_weight": {
+          "value": "number",
+          "calculation_method": "string",
+          "source": "manual|calculated|estimated",
+          "confidence": "number",
+          "override_justification": "string"
+        },
+        "friction_angle": {
+          "value": "number",
+          "calculation_method": "string", 
+          "source": "manual|calculated|estimated",
+          "confidence": "number",
+          "override_justification": "string"
+        },
+        "cohesion": {
+          "value": "number",
+          "calculation_method": "string",
+          "source": "manual|calculated|estimated", 
+          "confidence": "number",
+          "override_justification": "string"
+        },
+        "modulus_elasticity": {
+          "value": "number",
+          "calculation_method": "string",
+          "source": "manual|calculated|estimated",
+          "confidence": "number", 
+          "override_justification": "string"
+        },
+        "permeability": {
+          "horizontal": "number",
+          "vertical": "number",
+          "calculation_method": "string",
+          "source": "manual|calculated|estimated",
+          "confidence": "number",
+          "override_justification": "string"
+        }
+      },
+      "supporting_data": {
+        "samples_used": ["array of sample_ids"],
+        "calculation_details": "object",
+        "references": ["array of citations"]
+      }
+    }
+  ],
+  "calculation_methods": {
+    "equations_used": "object referencing equations.json",
+    "validation_results": "object",
+    "quality_metrics": "object"
+  }
+}
+```
+
+Rationale: Modular calculation system allows easy updates and validation. Multiple methods provide engineering flexibility. Citation tracking ensures traceability and professional standards. JSON export enables complete project preservation and sharing.
+
+PHASE 3: USER INTERFACE DEVELOPMENT (Weeks 5-8)
+==============================================
+
+STEP 5: MAIN APPLICATION FRAMEWORK
+----------------------------------
+Execute:
+1. Create main_window.py with:
+   - QMainWindow as base class
+   - Menu bar with File, Edit, View, Tools, Help menus
+   - Status bar with progress indicators and messages
+   - Toolbar with common actions
+   - Central widget with QTabWidget for main tabs
+
+2. Implement USCS Color Coding System:
+   - Cool colors (blues/purples) for fine-grained materials (CL, CH, ML, MH)
+   - Warm colors (reds/oranges) for granular materials (SW, SP, SC, SM)
+   - Greys for rock materials (bedrock, weathered rock)
+   - Greens for organic materials (OH, OL, Pt)
+   - Create color_schemes.py with RGB values and accessibility considerations
+
+3. Application State Management:
+   - Implement MVC pattern with QModel classes
+   - Create settings manager for user preferences
+   - Add undo/redo functionality using QUndoStack
+   - Implement auto-save functionality
+
+Design Considerations:
+- Use QSplitter widgets for resizable panels
+- Implement responsive layout with QLayout managers
+- Add keyboard shortcuts for common actions
+- Ensure high DPI display compatibility
+- Implement dark/light theme support
+
+Rationale: Professional GUI framework ensures consistent user experience. Color coding provides immediate visual feedback for soil classification. MVC pattern enables clean code organization and testability.
+
+STEP 6: TAB DEVELOPMENT (PARALLEL DEVELOPMENT)
+---------------------------------------------
+
+6A: MAP & PROFILE TAB
+Execute:
+1. Create map_profile_tab.py with:
+   - Interactive map widget using folium embedded in QWebEngineView
+   - Exploration location markers with popup information
+   - Profile viewer with selectable boreholes
+   - Cross-section generation between selected points
+
+Implementation Details:
+- Use PyQt6 QWebEngineView to embed folium maps
+- Create custom map markers for different exploration types
+- Implement borehole selection with Ctrl+click functionality
+- Generate real-time cross-sections using matplotlib
+- Add distance calculation between boreholes
+- Implement elevation profile smoothing options
+
+6B: INDEX VALUES TAB
+Execute:
+1. Create index_values_tab.py with:
+   - QTableWidget for tabular data display
+   - Custom plotting widgets using pyqtgraph
+   - Real-time filtering and sorting capabilities
+   - Export functionality for tables and plots
+
+Data Visualization:
+- X-axis: Index values (N-value, PI, %passing #200)
+- Y-axis: Elevation
+- Color coding by USCS soil type
+- Interactive data point selection
+- Zoom and pan capabilities
+- Statistical overlays (mean, percentiles)
+
+6C: DESIGN PARAMETER TABS
+Execute:
+1. Create parameter_tabs.py with individual tabs for:
+   - Unit Weight
+   - Granular Material Friction Angle
+   - Fine Material Effective Friction Angle
+   - Undrained Shear Strength
+   - Modulus of Elasticity
+   - Preconsolidation Pressure
+   - Coefficients of Consolidation
+   - Time Rate Coefficients
+   - Hydraulic Conductivity (Horizontal and Vertical)
+
+Each tab contains:
+- Parameter input widgets with validation
+- Calculation method selection dropdown
+- Comparison plot (manual vs. estimated values)
+- Confidence interval display
+- Calculation details and citations
+- Override capability with justification tracking
+- Export to JSON button for individual parameters
+- Layer-by-layer parameter assignment interface
+
+Rationale: Tabbed interface organizes complex information logically. Interactive visualization helps engineers make informed decisions. Comparison views validate manual inputs against established methods.
+
+PHASE 4: ADVANCED FEATURES (Weeks 9-10)
+======================================
+
+STEP 7: INTERACTIVE FEATURES
+----------------------------
+Execute:
+1. Manual Strata Elevation Input:
+   - Implement drag-and-drop interface for strata boundaries
+   - Create custom QGraphicsView for interactive editing
+   - Add snap-to-grid functionality for precise positioning
+   - Implement multi-point editing with smooth interpolation
+
+2. Parameter Override System:
+   - Create override dialogs with justification fields
+   - Track source of each parameter (calculated vs. manual)
+   - Implement approval workflow for parameter changes
+   - Add revision history with user timestamps
+
+3. Real-time Calculation Updates:
+   - Use Qt signals/slots for reactive programming
+   - Implement background calculation threads
+   - Add progress indicators for long calculations
+   - Create calculation result caching system
+
+4. Comparison Analysis:
+   - Side-by-side parameter comparison widgets
+   - Statistical analysis of differences
+   - Outlier detection and flagging
+   - Sensitivity analysis for parameter variations
+
+5. JSON Export/Import Integration:
+   - Complete soil profile export with all associated data
+   - Import existing JSON profiles into the application
+   - Validation of imported data against schema
+   - Merge functionality for combining multiple profiles
+   - Export options: full project, individual layers, parameter sets
+
+Implementation Strategy:
+- Use QGraphicsScene for interactive profile editing
+- Implement custom QAbstractItemModel for parameter management
+- Create worker threads for heavy calculations
+- Use QTimer for periodic auto-save
+
+Rationale: Interactive features enhance user productivity and accuracy. Real-time updates provide immediate feedback. Override tracking ensures engineering accountability and traceability.
+
+PHASE 5: TESTING & QUALITY ASSURANCE (Weeks 11-12)
+=================================================
+
+STEP 8: COMPREHENSIVE TESTING
+-----------------------------
+Execute:
+1. Unit Testing (test_calculations.py):
+   - Test all parameter calculation methods with known inputs/outputs
+   - Validate edge cases and error conditions
+   - Test unit conversions and validation ranges
+   - Use parametrized tests for multiple calculation methods
+
+2. Integration Testing (test_database.py):
+   - Test database import/export functionality
+   - Validate data integrity constraints
+   - Test concurrent database access
+   - Verify backup and restore operations
+
+2a. JSON Export/Import Testing (test_json_export.py, test_json_import.py):
+   - Test JSON schema validation with valid and invalid data
+   - Verify complete data preservation during export/import cycles
+   - Test edge cases with missing or corrupted data
+   - Validate calculation method preservation and accuracy
+   - Test large dataset performance for JSON operations
+
+3. GUI Testing (test_gui.py):
+   - Use pytest-qt for GUI testing
+   - Test user interactions and workflows
+   - Validate data visualization accuracy
+   - Test responsive layout on different screen sizes
+
+4. Performance Testing:
+   - Benchmark calculation performance with large datasets
+   - Memory usage profiling with profiling tools
+   - UI responsiveness testing under load
+   - Database query optimization validation
+
+5. User Acceptance Testing:
+   - Create test scenarios based on typical engineering workflows
+   - Conduct testing with actual geotechnical engineers
+   - Document usability issues and improvement suggestions
+   - Validate calculation results against hand calculations
+
+Testing Tools:
+- pytest for test framework
+- pytest-qt for GUI testing
+- pytest-benchmark for performance testing
+- coverage.py for code coverage analysis
+- memory_profiler for memory usage analysis
+
+Rationale: Comprehensive testing ensures reliability for professional engineering use. Performance testing prevents issues with large datasets. User acceptance testing validates practical usability.
+
+PHASE 6: DEPLOYMENT & DISTRIBUTION (Weeks 13-14)
+===============================================
+
+STEP 9: EXECUTABLE CREATION
+---------------------------
+Execute:
+1. PyInstaller Configuration:
+   - Create spec file for executable building
+   - Configure resource bundling (icons, stylesheets, equations)
+   - Optimize executable size with UPX compression
+   - Create installer using NSIS or Inno Setup
+
+2. Cross-platform Compatibility:
+   - Test on Windows 10/11 (primary target)
+   - Verify compatibility with different screen resolutions
+   - Test with various SQLite database sizes
+   - Validate file path handling across systems
+
+3. Security Implementation:
+   - Code obfuscation for intellectual property protection
+   - Digital signing for Windows SmartScreen compatibility
+   - Implement license validation system
+   - Add crash reporting and analytics
+
+PyInstaller Configuration Example:
+```python
+# strata_interpreter.spec
+a = Analysis(
+    ['src/main.py'],
+    pathex=['.'],
+    binaries=[],
+    datas=[('src/resources', 'resources')],
+    hiddenimports=['PyQt6.QtWebEngineWidgets'],
+    hookspath=[],
+    hooksconfig={},
+    runtime_hooks=[],
+    excludes=[],
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=None,
+    noarchive=False,
+)
+```
+
+STEP 10: PROFESSIONAL DEPLOYMENT STRATEGY
+-----------------------------------------
+Execute:
+1. Version Control Strategy:
+   - Implement semantic versioning (MAJOR.MINOR.PATCH)
+   - Create release branches and hotfix workflows
+   - Tag releases with changelog information
+   - Implement automated version number updates
+   - Include JSON schema versioning for backward compatibility
+
+2. CI/CD Pipeline (.github/workflows/test-and-build.yml):
+   - Automated testing on pull requests
+   - Automated building for releases
+   - Code quality checks (linting, type checking)
+   - Security vulnerability scanning
+
+3. Update Mechanism:
+   - Implement auto-update checker in application
+   - Create update server for version management
+   - Provide manual download options
+   - Implement rollback capability for failed updates
+
+4. Documentation System:
+   - Create user manual with screenshots and tutorials
+   - Generate API documentation from code comments
+   - Provide installation and troubleshooting guides
+   - Create video tutorials for complex workflows
+
+5. Support Infrastructure:
+   - GitHub Issues for bug tracking and feature requests
+   - Automated changelog generation from commit messages
+   - User feedback collection system
+   - Performance monitoring and error reporting
+
+Rationale: Professional deployment ensures reliable distribution and updates. Automated processes reduce maintenance overhead. Comprehensive documentation improves user adoption and reduces support burden.
+
+PHASE 7: MAINTENANCE & UPDATES
+=============================
+
+STEP 11: LONG-TERM MAINTENANCE
+------------------------------
+Execute:
+1. Monitoring and Analytics:
+   - Implement application usage analytics
+   - Monitor performance metrics and error rates
+   - Track feature usage for future development priorities
+   - Set up automated alerts for critical issues
+
+2. Dependency Management:
+   - Regular security updates for all dependencies
+   - Automated dependency vulnerability scanning
+   - Compatibility testing with new library versions
+   - Maintenance of frozen requirements for stable releases
+
+3. User Feedback Integration:
+   - Regular user surveys and feedback collection
+   - Feature request evaluation and prioritization
+   - Bug report triage and resolution workflows
+   - Communication channels for user community
+
+4. Performance Optimization:
+   - Regular profiling and optimization cycles
+   - Database query optimization
+   - Memory usage optimization
+   - UI responsiveness improvements
+
+5. Feature Evolution:
+   - Roadmap planning based on user feedback
+   - Research integration of new geotechnical methods
+   - API development for third-party integrations
+   - Machine learning integration for parameter prediction
+
+Maintenance Schedule:
+- Weekly: Automated security scans and dependency updates
+- Monthly: Performance monitoring review and optimization
+- Quarterly: User feedback analysis and feature planning
+- Annually: Major version planning and technology stack review
+
+PROFESSIONAL CONSIDERATIONS
+==========================
+
+CODE QUALITY STANDARDS:
+- Use type hints throughout codebase (mypy compliance)
+- Maintain 90%+ test coverage
+- Follow PEP 8 style guidelines with black formatting
+- Use meaningful variable names and comprehensive docstrings
+- Implement proper logging throughout application
+
+ERROR HANDLING:
+- Comprehensive exception handling with user-friendly messages
+- Detailed logging for debugging and support
+- Graceful degradation for non-critical features
+- Data validation at all input points
+- Recovery mechanisms for corrupted data
+
+SECURITY MEASURES:
+- Input sanitization for all user inputs
+- Secure database connection practices
+- Protection against SQL injection attacks
+- Secure file handling for database imports
+- Regular security audits of dependencies
+
+PERFORMANCE OPTIMIZATION:
+- Lazy loading for large datasets
+- Efficient database queries with proper indexing
+- Memory management for large data processing
+- Background processing for time-intensive calculations
+- Responsive UI design with progress indicators
+
+ACCESSIBILITY:
+- Keyboard navigation support
+- Screen reader compatibility
+- High contrast mode support
+- Scalable fonts and UI elements
+- Color-blind friendly design options
+
+JSON SOIL PROFILE EXPORT/IMPORT IMPLEMENTATION DETAILS
+====================================================
+
+JSON_EXPORT.PY IMPLEMENTATION:
+- Create SoilProfileExporter class with methods:
+  * export_complete_project(): Full project with all data
+  * export_strata_layer(strata_id): Individual layer with parameters
+  * export_parameter_set(parameter_type): Specific parameter across all layers
+  * validate_export_data(): Ensure data completeness before export
+  * compress_export(): Optional compression for large datasets
+
+JSON_IMPORT.PY IMPLEMENTATION:
+- Create SoilProfileImporter class with methods:
+  * import_complete_project(): Load full project from JSON
+  * import_strata_layers(): Import individual layers into existing project
+  * validate_import_schema(): Validate against soil_profile_schema.json
+  * merge_projects(): Combine multiple JSON profiles
+  * handle_version_compatibility(): Manage schema version differences
+
+FILE MENU INTEGRATION:
+- Add menu items: File > Export > Soil Profile (JSON)
+- Add menu items: File > Import > Soil Profile (JSON)
+- Add keyboard shortcuts: Ctrl+E (Export), Ctrl+I (Import)
+- Implement recent files list for JSON profiles
+- Add auto-save functionality for JSON backups
+
+USER WORKFLOW:
+1. Engineer completes strata interpretation and parameter assignment
+2. Application automatically tracks all supporting data (lab tests, field data, calculations)
+3. Engineer clicks "Export Soil Profile" to save complete project as JSON
+4. JSON file can be shared with colleagues or loaded into other instances
+5. Import functionality validates data and recreates complete project state
+6. Version control enables tracking of interpretation changes over time
+
+This comprehensive development plan ensures creation of a professional, maintainable, and scalable geotechnical engineering application that meets industry standards and user expectations, with complete data preservation and sharing capabilities through standardized JSON export/import functionality.

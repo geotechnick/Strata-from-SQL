@@ -1,0 +1,31 @@
+# Core GUI Framework
+PyQt6>=6.6.0
+PyQt6-WebEngine>=6.6.0
+
+# Database and Data Processing
+SQLAlchemy>=2.0.0
+pandas>=2.0.0
+numpy>=1.24.0
+
+# Visualization
+matplotlib>=3.7.0
+pyqtgraph>=0.13.0
+folium>=0.14.0
+
+# JSON Schema Validation
+jsonschema>=4.17.0
+
+# Scientific Computing
+scipy>=1.10.0
+
+# Excel/Office Integration
+openpyxl>=3.1.0
+
+# Geospatial Libraries
+pyproj>=3.5.0
+
+# File Handling
+pathlib2>=2.3.0
+
+# Logging and Configuration
+pyyaml>=6.0

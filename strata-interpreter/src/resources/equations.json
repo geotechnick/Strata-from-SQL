@@ -1,0 +1,342 @@
+{
+  "version": "1.0.0",
+  "description": "Geotechnical parameter calculation equations and correlations",
+  "last_updated": "2025-01-01",
+  
+  "unit_weight": {
+    "saturated_unit_weight": {
+      "equation": "γ_sat = γ_dry × (1 + w/100)",
+      "variables": {
+        "γ_sat": "Saturated unit weight (pcf)",
+        "γ_dry": "Dry unit weight (pcf)", 
+        "w": "Natural moisture content (%)"
+      },
+      "references": ["Soil Mechanics Fundamentals, Das (2019)"],
+      "notes": "Assumes full saturation"
+    },
+    "submerged_unit_weight": {
+      "equation": "γ_sub = γ_sat - γ_w",
+      "variables": {
+        "γ_sub": "Submerged unit weight (pcf)",
+        "γ_sat": "Saturated unit weight (pcf)",
+        "γ_w": "Unit weight of water (62.4 pcf)"
+      },
+      "references": ["Soil Mechanics Fundamentals, Das (2019)"],
+      "notes": "Used for effective stress calculations"
+    }
+  },
+  
+  "friction_angle": {
+    "spt_correlation_peck": {
+      "equation": "φ = 28 + 15 × log₁₀(N)",
+      "variables": {
+        "φ": "Friction angle (degrees)",
+        "N": "SPT N-value (blows/ft)"
+      },
+      "applicable_soils": ["SW", "SP", "SM", "SC"],
+      "range": {
+        "N_min": 4,
+        "N_max": 50,
+        "φ_max": 45
+      },
+      "references": ["Peck, Hanson, and Thornburn (1974)"],
+      "notes": "For granular soils, capped at 45 degrees"
+    },
+    "spt_correlation_schmertmann": {
+      "equation": "φ = 27.1 + 0.3 × N - 0.00054 × N²",
+      "variables": {
+        "φ": "Friction angle (degrees)",
+        "N": "SPT N-value (blows/ft)"
+      },
+      "applicable_soils": ["SW", "SP", "SM", "SC"],
+      "range": {
+        "N_min": 1,
+        "N_max": 60
+      },
+      "references": ["Schmertmann (1975)"],
+      "notes": "Alternative correlation for granular soils"
+    },
+    "direct_shear_analysis": {
+      "equation": "τ = c + σ × tan(φ)",
+      "variables": {
+        "τ": "Shear strength (psf)",
+        "c": "Cohesion (psf)",
+        "σ": "Normal stress (psf)", 
+        "φ": "Friction angle (degrees)"
+      },
+      "analysis": "Linear regression on τ vs σ data to find tan(φ)",
+      "references": ["ASTM D3080"],
+      "notes": "Requires minimum 3 test points"
+    }
+  },
+  
+  "undrained_shear_strength": {
+    "unconfined_compression": {
+      "equation": "Su = qu / 2",
+      "variables": {
+        "Su": "Undrained shear strength (psf)",
+        "qu": "Unconfined compressive strength (psf)"
+      },
+      "applicable_soils": ["CL", "CH", "ML", "MH"],
+      "references": ["ASTM D2166"],
+      "notes": "Assumes φ = 0 condition"
+    },
+    "triaxial_undrained": {
+      "equation": "Su = (σ₁ - σ₃) / 2",
+      "variables": {
+        "Su": "Undrained shear strength (psf)",
+        "σ₁": "Major principal stress at failure (psf)",
+        "σ₃": "Minor principal stress (confining pressure) (psf)"
+      },
+      "references": ["ASTM D4767"],
+      "notes": "From undrained triaxial compression test"
+    },
+    "field_vane": {
+      "equation": "Su = T / (π × D³ × (H/D + 1/3))",
+      "variables": {
+        "Su": "Undrained shear strength (psf)",
+        "T": "Applied torque (lb-ft)",
+        "D": "Vane diameter (ft)",
+        "H": "Vane height (ft)"
+      },
+      "references": ["ASTM D2573"],
+      "notes": "Field vane shear test"
+    }
+  },
+  
+  "modulus_elasticity": {
+    "spt_correlation_granular": {
+      "equation": "E = 500 × N",
+      "variables": {
+        "E": "Modulus of elasticity (ksf)",
+        "N": "SPT N-value (blows/ft)"
+      },
+      "applicable_soils": ["GW", "GP", "GM", "GC", "SW", "SP", "SM", "SC"],
+      "range": {
+        "N_min": 4,
+        "N_max": 50
+      },
+      "references": ["Bowles (1996)"],
+      "notes": "For granular soils"
+    },
+    "spt_correlation_cohesive": {
+      "equation": "E = 300 × N",
+      "variables": {
+        "E": "Modulus of elasticity (ksf)",
+        "N": "SPT N-value (blows/ft)"
+      },
+      "applicable_soils": ["CL", "CH", "ML", "MH"],
+      "range": {
+        "N_min": 2,
+        "N_max": 30
+      },
+      "references": ["Bowles (1996)"],
+      "notes": "For cohesive soils"
+    },
+    "unconfined_compression_correlation": {
+      "equation": "E = C × qu",
+      "variables": {
+        "E": "Modulus of elasticity (ksf)",
+        "qu": "Unconfined compressive strength (psf)",
+        "C": "Correlation factor (100-500)"
+      },
+      "typical_c_values": {
+        "soft_clay": 100,
+        "medium_clay": 300,
+        "stiff_clay": 500
+      },
+      "references": ["Duncan and Buchignani (1976)"],
+      "notes": "For cohesive soils"
+    }
+  },
+  
+  "permeability": {
+    "hazen_formula": {
+      "equation": "k = C × D₁₀²",
+      "variables": {
+        "k": "Coefficient of permeability (cm/s)",
+        "C": "Hazen coefficient (80-120)",
+        "D₁₀": "Effective grain size (mm)"
+      },
+      "typical_c": 100,
+      "applicable_soils": ["SW", "SP"],
+      "requirements": [
+        "Uniformity coefficient Cu < 5",
+        "Fines content < 5%",
+        "0.1 mm < D₁₀ < 3.0 mm"
+      ],
+      "references": ["Hazen (1892)"],
+      "notes": "For clean, uniform sands"
+    },
+    "kozeny_carman": {
+      "equation": "k = (D₁₀² × n³) / (C × (1-n)²)",
+      "variables": {
+        "k": "Coefficient of permeability (cm/s)",
+        "D₁₀": "Effective grain size (mm)",
+        "n": "Porosity (dimensionless)",
+        "C": "Shape factor (typically 180)"
+      },
+      "references": ["Kozeny (1927), Carman (1937)"],
+      "notes": "More general formula, requires porosity estimate"
+    },
+    "laboratory_constant_head": {
+      "equation": "k = (Q × L) / (A × h × t)",
+      "variables": {
+        "k": "Coefficient of permeability (cm/s)",
+        "Q": "Volume of water collected (cm³)",
+        "L": "Length of specimen (cm)",
+        "A": "Cross-sectional area (cm²)",
+        "h": "Head difference (cm)",
+        "t": "Time duration (s)"
+      },
+      "references": ["ASTM D5084"],
+      "notes": "For granular soils with k > 10⁻⁴ cm/s"
+    },
+    "laboratory_falling_head": {
+      "equation": "k = (a × L × ln(h₁/h₂)) / (A × t)",
+      "variables": {
+        "k": "Coefficient of permeability (cm/s)",
+        "a": "Cross-sectional area of standpipe (cm²)",
+        "L": "Length of specimen (cm)",
+        "A": "Cross-sectional area of specimen (cm²)",
+        "h₁": "Initial head (cm)",
+        "h₂": "Final head (cm)",
+        "t": "Time duration (s)"
+      },
+      "references": ["ASTM D5084"],
+      "notes": "For fine-grained soils with k < 10⁻⁴ cm/s"
+    }
+  },
+  
+  "consolidation": {
+    "preconsolidation_casagrande": {
+      "method": "Casagrande construction on e-log p curve",
+      "procedure": [
+        "Plot void ratio vs log effective stress",
+        "Find point of maximum curvature on virgin compression curve",
+        "Draw horizontal line through this point",
+        "Draw tangent to curve at this point",
+        "Bisect angle between horizontal and tangent",
+        "Extend straight-line portion of curve to intersect bisector",
+        "Read σ'p at intersection"
+      ],
+      "variables": {
+        "σ'p": "Preconsolidation pressure (psf)",
+        "e": "Void ratio (dimensionless)",
+        "σ'": "Effective stress (psf)"
+      },
+      "references": ["Casagrande (1936)", "ASTM D2435"],
+      "notes": "Graphical method, requires consolidation test data"
+    },
+    "compression_index": {
+      "equation": "Cc = Δe / Δ(log σ')",
+      "variables": {
+        "Cc": "Compression index (dimensionless)",
+        "Δe": "Change in void ratio",
+        "σ'": "Effective stress (psf)"
+      },
+      "correlation_skempton": {
+        "equation": "Cc = 0.009 × (LL - 10)",
+        "variables": {
+          "LL": "Liquid limit (%)"
+        },
+        "references": ["Skempton (1944)"]
+      },
+      "references": ["ASTM D2435"],
+      "notes": "Slope of virgin compression line"
+    },
+    "coefficient_consolidation": {
+      "equation": "Cv = (T₅₀ × H²) / t₅₀",
+      "variables": {
+        "Cv": "Coefficient of consolidation (in²/min)",
+        "T₅₀": "Time factor for 50% consolidation (0.197)",
+        "H": "Drainage path length (in)",
+        "t₅₀": "Time for 50% consolidation (min)"
+      },
+      "alternative_t90": {
+        "equation": "Cv = (T₉₀ × H²) / t₉₀",
+        "T₉₀": 0.848,
+        "note": "Using 90% consolidation"
+      },
+      "references": ["Terzaghi (1943)", "ASTM D2435"],
+      "notes": "From consolidation test time-settlement curve"
+    }
+  },
+  
+  "validation_ranges": {
+    "unit_weight": {
+      "min": 80,
+      "max": 150,
+      "units": "pcf",
+      "typical_ranges": {
+        "loose_sand": [90, 110],
+        "dense_sand": [110, 130],
+        "soft_clay": [90, 110],
+        "stiff_clay": [110, 130],
+        "rock": [130, 180]
+      }
+    },
+    "friction_angle": {
+      "min": 15,
+      "max": 45,
+      "units": "degrees",
+      "typical_ranges": {
+        "loose_sand": [25, 32],
+        "dense_sand": [32, 40],
+        "silty_sand": [25, 35],
+        "clay": [0, 25]
+      }
+    },
+    "undrained_shear_strength": {
+      "min": 0,
+      "max": 10000,
+      "units": "psf",
+      "consistency_limits": {
+        "very_soft": [0, 250],
+        "soft": [250, 500],
+        "medium": [500, 1000],
+        "stiff": [1000, 2000],
+        "very_stiff": [2000, 4000],
+        "hard": [4000, 10000]
+      }
+    },
+    "modulus_elasticity": {
+      "min": 1000,
+      "max": 100000,
+      "units": "ksf",
+      "typical_ranges": {
+        "soft_clay": [1000, 5000],
+        "stiff_clay": [5000, 15000],
+        "loose_sand": [5000, 20000],
+        "dense_sand": [20000, 50000]
+      }
+    },
+    "permeability": {
+      "min": 1e-9,
+      "max": 1e-1,
+      "units": "cm/s",
+      "typical_ranges": {
+        "gravel": [1e-1, 1e-3],
+        "sand": [1e-3, 1e-5],
+        "silt": [1e-5, 1e-7],
+        "clay": [1e-7, 1e-9]
+      }
+    }
+  },
+  
+  "quality_control": {
+    "minimum_data_requirements": {
+      "unit_weight": ["dry_density or (wet_density and moisture_content)"],
+      "friction_angle": ["spt_n_value or direct_shear_tests or triaxial_tests"],
+      "undrained_shear_strength": ["unconfined_compression or triaxial_undrained"],
+      "modulus_elasticity": ["spt_n_value or unconfined_compression"],
+      "permeability": ["laboratory_test or gradation_data"]
+    },
+    "confidence_factors": {
+      "laboratory_test": 0.9,
+      "field_test": 0.8,
+      "correlation": 0.6,
+      "estimation": 0.4
+    }
+  }
+}

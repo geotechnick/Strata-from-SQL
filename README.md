@@ -16,23 +16,45 @@ This bridges the gap between field investigation and engineering design by provi
 
 ## Quick Start
 
-### Option 1: Download Executable (Recommended)
-1. Go to [Releases](https://github.com/geotechnick/Strata-from-SQL/releases)
-2. Download `StrataInterpreter.exe` 
-3. Run the executable - no installation needed!
+**Requirements:** Python 3.9+ ([download here](https://python.org))
 
-### Option 2: Run from Source
 ```bash
-# Clone and setup
+# 1. Clone the repository
 git clone https://github.com/geotechnick/Strata-from-SQL.git
-cd Strata-from-SQL/strata-interpreter
-python -m venv strata_env
-strata_env\Scripts\activate
+cd Strata-from-SQL
 
-# Install and run
+# 2. Set up Python environment
+python -m venv strata_env
+strata_env\Scripts\activate        # Windows
+# source strata_env/bin/activate   # macOS/Linux
+
+# 3. Install dependencies
+cd strata-interpreter
 pip install -r requirements.txt
+
+# 4. Run the application
 python src/main.py
 ```
+
+## Creating the Executable
+
+To build the executable for distribution:
+
+```bash
+# Navigate to the strata-interpreter folder
+cd strata-interpreter
+
+# Option 1: Use the batch script (Windows)
+create_release.bat
+
+# Option 2: Use the Python build script
+python build_exe.py
+
+# Option 3: Use PyInstaller directly
+pyinstaller strata_interpreter.spec
+```
+
+The executable will be created in `strata-interpreter/release/StrataInterpreter.exe` and is ready for distribution.
 
 ## How to Use
 

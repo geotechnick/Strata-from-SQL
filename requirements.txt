@@ -29,3 +29,6 @@ pathlib2>=2.3.0
 
 # Logging and Configuration
 pyyaml>=6.0
+
+# Executable Building
+PyInstaller>=5.13.0
